@@ -234,17 +234,40 @@ class Controller extends \Piwik\Plugin\Controller
             throw new Exception(Piwik::translate("LoginOIDC_ExceptionInvalidResponse"));
         }
 
+        if (!empty($settings->keycloakRealmRole->getValue())) {
+            // Require configured Keycloak realm role in the JWT token.
+            $jwt_parts = explode('.', $result->access_token);
+            $jwt_body = json_decode(base64_decode($jwt_parts[1]));
+
+            if (!isset($jwt_body->realm_access)
+                || !isset($jwt_body->realm_access->roles)
+                || !in_array($settings->keycloakRealmRole->getValue(), $jwt_body->realm_access->roles)) {
+                throw new Exception(Piwik::translate("LoginOIDC_ExceptionNotAuthorized"));
+            }
+        }
+
         $_SESSION['loginoidc_idtoken'] = empty($result->id_token) ? null : $result->id_token;
         $_SESSION['loginoidc_auth'] = true;
 
         $curl = curl_init();
+
+        // Use Forwarding-headers with the host and scheme from the authorize URL
+        // so the token issuer (iss) is matched when making internal requests to Keycloak.
+        // Note: an alternative implementation for this could be to route the request through
+        // a proxy (e.g. nginx) and let the proxy add the Forwarding-headers.
+        $authorizeUrlParsed = parse_url($settings->authorizeUrl->getValue());
+        $authorizeHost = $authorizeUrlParsed['host'];
+        $authorizeScheme = $authorizeUrlParsed['scheme'];
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             "Authorization: Bearer " . $result->access_token,
             "Accept: application/json",
-            "User-Agent: LoginOIDC-Matomo-Plugin"
+            "User-Agent: LoginOIDC-Matomo-Plugin",
+            "X-Forwarded-Host: " . $authorizeHost,
+            "X-Forwarded-Proto: " . $authorizeScheme
         ));
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_URL, $settings->userinfoUrl->getValue());
+
         // request remote userinfo and remote user id
         $response = curl_exec($curl);
         curl_close($curl);
@@ -346,12 +369,13 @@ class Controller extends \Piwik\Plugin\Controller
             }
 
             // set an invalid pre-hashed password, to block the user from logging in by password
+            // set $initialIdSite = 1 to allow access to the default site.
             Access::getInstance()->doAsSuperUser(function () use ($matomoUserLogin, $result) {
                 UsersManagerApi::getInstance()->addUser($matomoUserLogin,
                                                         "(disallow password login)",
                                                         $matomoUserLogin,
                                                         /* $_isPasswordHashed = */ true,
-                                                        /* $initialIdSite = */ null);
+                                                        /* $initialIdSite = */ 1);
             });
             $userModel = new Model();
             $user = $userModel->getUser($matomoUserLogin);
