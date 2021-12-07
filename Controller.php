@@ -382,7 +382,6 @@ class Controller extends \Piwik\Plugin\Controller
             }
 
             // set an invalid pre-hashed password, to block the user from logging in by password
-            // set $initialIdSite = 1 to allow access to the default site.
             Access::getInstance()->doAsSuperUser(function () use ($matomoUserLogin, $result) {
                 UsersManagerApi::getInstance()->addUser($matomoUserLogin,
                                                         "(disallow password login)",
