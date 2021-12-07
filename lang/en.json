@@ -32,6 +32,8 @@
         "SettingAllowedSignupDomainsHelp": "List of email domains which should be allowed to create new accounts. Multiple domains have to be separated by line breaks. When empty, any email domain will be accepted.",
         "SettingAutoLinking": "Enable auto linking",
         "SettingAutoLinkingHelp": "Enables auto linking of accounts which have the same user id in Matomo and the OIDC provider",
+        "SettingKeycloakRealmRole": "Keycloak realm role to require for a user to be allowed to log in to Matomo",
+        "SettingKeycloakRealmRoleHelp": "Keycloak provides realm roles in the JWT token, if configured. Use this setting to check for such a role.",
         "OpenIDConnect": "OpenID Connect",
         "OIDCIntro": "This allows you to sign in using an external authentication service.",
         "AccountLinked": "Your account is currently linked (Remote User ID: %1$s).",
@@ -47,6 +49,7 @@
         "ExceptionSuperUserOauthDisabled": "OAuth login disabled for superusers.",
         "ExceptionAllowedSignupDomainsValidationFailed": "Validation failed for the list of domains allowed for user creation.",
         "ExceptionAllowedSignupDomainsDenied": "The domain is currently not activated for account creation.",
-        "ExceptionAlreadyLinkedToDifferentAccount": "The remote OAuth user is already linked to another account."
+        "ExceptionAlreadyLinkedToDifferentAccount": "The remote OAuth user is already linked to another account.",
+        "ExceptionNotAuthorized": "The remote OAuth user is not authorized to log in."
     }
 }

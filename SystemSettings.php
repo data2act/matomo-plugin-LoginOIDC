@@ -133,6 +133,12 @@ class SystemSettings extends \Piwik\Settings\Plugin\SystemSettings
     public $allowedSignupDomains;
 
     /**
+     * Role that the user should have in their Keycloak realm roles to get access to Matomo.
+     *
+     */
+    public $keycloakRealmRole;
+
+    /**
      * Initialize the plugin settings.
      *
      * @return void
@@ -155,6 +161,7 @@ class SystemSettings extends \Piwik\Settings\Plugin\SystemSettings
         $this->scope = $this->createScopeSetting();
         $this->redirectUriOverride = $this->createRedirectUriOverrideSetting();
         $this->allowedSignupDomains = $this->createAllowedSignupDomainsSetting();
+        $this->keycloakRealmRole = $this->createKeycloakRealmRoleSetting();
     }
 
     /**
@@ -395,6 +402,20 @@ class SystemSettings extends \Piwik\Settings\Plugin\SystemSettings
                     }
                 }
             };
+        });
+    }
+
+    /**
+     * Add keycloak realm role setting.
+     *
+     * @return SystemSetting
+     */
+    private function createKeycloakRealmRoleSetting() : SystemSetting
+    {
+        return $this->makeSetting("keycloakRealmRole", $default = "", FieldConfig::TYPE_STRING, function(FieldConfig $field) {
+            $field->title = Piwik::translate("LoginOIDC_SettingKeycloakRealmRole");
+            $field->description = Piwik::translate("LoginOIDC_SettingKeycloakRealmRoleHelp");
+            $field->uiControl = FieldConfig::UI_CONTROL_TEXT;
         });
     }
 }
